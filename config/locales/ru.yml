@@ -1,0 +1,8 @@
+# Russian strings go here for Rails i18n
+ru:
+  label_account_login: "Логин/email адрес google аккаунта"
+  label_account_password: "Пароль"
+  label_google_group_title: "Группа аккаунта в google"
+  label_user_group: "Группа контактов для синхронизации"
+  label_minimal_interval_for_sync: "Интервал (в сек) между соединениями (для предотвращения флуда)"
+  sync_all:

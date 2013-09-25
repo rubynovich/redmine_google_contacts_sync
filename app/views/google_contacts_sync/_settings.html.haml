@@ -1,0 +1,21 @@
+%p
+  %label= l(:label_account_login)
+  = text_field_tag("settings[account_login]", @settings[:account_login])
+%p
+  %label= l(:label_account_password)
+  = password_field_tag("settings[account_password]", @settings[:account_password])
+%p
+  %label= l(:label_minimal_interval_for_sync)
+  = number_field_tag("settings[minimal_interval_for_sync]", @settings[:minimal_interval_for_sync])
+%p
+  %label= l(:label_google_group_title)
+  = password_field_tag("settings[group_title]", @settings[:google_group_title])
+%p
+  %label= l(:label_group)
+  = select_tag('settings[group]', options_for_select(Principal.all.map{|principal| [principal.id, principal.name}.to_a, @settings['group']))
+
+%p
+  %label= l(:label_sync_after_save)
+  = check_box_tag("settings[sync_after_sace]", 1 , @settings[:sync_after_save].to_i == 1)
+
+
