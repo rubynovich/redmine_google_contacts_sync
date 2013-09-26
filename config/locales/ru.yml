@@ -5,4 +5,6 @@ ru:
   label_google_group_title: "Группа аккаунта в google"
   label_user_group: "Группа контактов для синхронизации"
   label_minimal_interval_for_sync: "Интервал (в сек) между соединениями (для предотвращения флуда)"
-  sync_all:
+  sync_all: "Обновить все"
+  setup_settings_first: "Задайте первоначальные настройки модуля"
+  label_sync_after_save: "Синхронизировать аккаунты сразу"

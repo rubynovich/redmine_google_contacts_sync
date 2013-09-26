@@ -1,4 +1,4 @@
-class CreateUserGoogleContacts < ActiveRecord::Migration
+class AppendUserFields < ActiveRecord::Migration
   def change
     add_column :users, :google_contact_id, :string
     add_column :users, :last_google_sync_at, :datetime, :default => '2000-01-01'.to_time

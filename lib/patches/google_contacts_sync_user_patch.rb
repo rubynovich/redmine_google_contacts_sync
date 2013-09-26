@@ -13,7 +13,7 @@ module GoogleContactsSyncPlugin
       end
 
       def run_google_sync
-        if Setting[:plugin_redmine_google_contacts_sync][:sync_after_update]
+        if Setting[:plugin_redmine_google_contacts_sync] && Setting[:plugin_redmine_google_contacts_sync][:sync_after_update]
           UserGoogleContact.sync_all!
         end
       end
