@@ -16,7 +16,11 @@
   = select_tag('settings[group]', options_for_select(Principal.order("type asc").map{|principal| [principal.name, principal.id]}.to_a, @settings['group']))
 
 %p
+  %label= l(:label_company_income_phones)
+  = text_area_tag("settings[company_income_phones]", @settings[:company_income_phones])
+
+%p
   %label= l(:label_sync_after_save)
-  = check_box_tag("settings[sync_after_sace]", 1 , @settings[:sync_after_save].to_i == 1)
+  = check_box_tag("settings[sync_after_save]", 1 , @settings[:sync_after_save].to_i == 1)
 
 

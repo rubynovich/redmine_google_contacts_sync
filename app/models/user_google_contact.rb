@@ -5,10 +5,9 @@ class UserGoogleContact < Person
   cattr_accessor :google_group_id
   cattr_accessor :google_group_uri
   cattr_accessor :google_group_title
-  #UserGoogleContact.auth!
 
   scope :must_update, lambda{ where(:must_google_sync => true).where(["users.last_google_sync_at <= ?", (Time.now - Setting[:plugin_redmine_google_contacts_sync][:minimal_interval_for_sync].to_i.seconds) ]) }
-
+  scope :by_ids, lambda{|ids| where(:id=>ids)}
 
   def self.auth!
     self.check_settings!
@@ -21,11 +20,20 @@ class UserGoogleContact < Person
     self.google_contacts
   end
 
-  def self.sync_all!
+
+  def self.sync_all!(options={})
+    principal = Principal.where(id: Setting[:plugin_redmine_google_contacts_sync][:group].to_i).first
+    if principal.try(:type) == 'Group'
+      ids = principal.user_ids
+    elsif principal.try(:type) == 'User'
+      ids = [principal.id]
+    else
+      ids = []
+    end
     self.auth!
     self.create_group! unless self.group_exists?
-    self.must_update.each do |user_google_contact|
-      user_google_contact.sync
+    (options[:force] ? self.by_ids(ids).all : self.by_ids(ids).must_update).each do |user_google_contact|
+      user_google_contact.sync!
     end
   end
 
@@ -45,7 +53,7 @@ class UserGoogleContact < Person
       end
     end
     if Setting[:plugin_redmine_google_contacts_sync][:google_group_title].blank?
-      @@google_group_uri
+      @@google_group_uri = nil
       @@google_group_id = nil
       @@google_group_title = ""
     end
@@ -67,21 +75,65 @@ class UserGoogleContact < Person
     @@google_group_title = group.title
   end
 
-  def sync
+  def self.clear_google_contacts!
+    self.auth!
+    self.google_group_id
+    gc = self.google_contacts
+    list = gc.all
+    list.each do |contact|
+      if (contact.group_ids.is_a?(Array) && contact.group_ids.include?(self.google_group_uri)) || (self.google_group_uri.nil? && contact.group_id = nil)
+        contact.delete
+      end
+    end
+    gc.batch!(list)
+  end
+
+  def sync!(options={})
+    self.class.auth!
+    self.google_group_id
     gc = self.class.google_contacts
     if self.google_contact_id.present?
       contact = gc.get(self.google_contact_id)
-    else
+      action = self.status == 1 ? :update : :destroy
+    end
+    if contact.nil?
       contact = GoogleContacts::Element.new
+      action = :create
     end
     contact.category = "contact"
+    if [:create, :update].include?(action)
+      contact.title = self.name
+      contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present?
+      contact.add_email(self.email, :work, :primary=>true)
+      contact.add_im(self.email, :google_talk)
+      self.phones.each do |phone|
+        phone.gsub!(/^8/,'+7')
+        contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
+      end
 
-    contact.title = self.name
-
-    self.no_set_google_sync = true
-    self.must_google_sync = false
-    self.last_google_sync_at = Time.now
-    self.save
+      self.no_set_google_sync = true
+      self.must_google_sync = false
+      self.last_google_sync_at = Time.now
+    end
+    if action == :create
+      contact = gc.create!(contact)
+      self.google_contact_id = File.basename(contact.id)
+    elsif action == :update
+      gc.update!(contact)
+    elsif action == :destroy
+      gc.delete!(contact)
+      self.google_contact_id = nil
+    end
+    unless self.save
+      if self.errors.count > 0
+        puts self.errors.inspect
+      end
+    end
+    if self.avatar && [:create, :update].include?(action)
+      gc.update_photo!(contact, self.avatar.diskfile) if File.exist?(self.avatar.diskfile)
+    elsif gc.get_photo(contact) || action == :destroy
+      gc.delete_photo!(contact)
+    end
   end
 
   private
