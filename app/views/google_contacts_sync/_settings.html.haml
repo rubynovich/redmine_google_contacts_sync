@@ -15,9 +15,9 @@
   %label= l(:label_group)
   = select_tag('settings[group]', options_for_select(Principal.order("type asc").map{|principal| [principal.name, principal.id]}.to_a, @settings['group']))
 
-%p
-  %label= l(:label_company_income_phones)
-  = text_area_tag("settings[company_income_phones]", @settings[:company_income_phones])
+//%p
+//  %label= l(:label_company_income_phones)
+//  = text_area_tag("settings[company_income_phones]", @settings[:company_income_phones])
 
 %p
   %label= l(:label_sync_after_save)

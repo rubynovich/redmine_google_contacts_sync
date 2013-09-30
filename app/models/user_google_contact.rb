@@ -141,9 +141,6 @@ class UserGoogleContact < Person
     if Setting[:plugin_redmine_google_contacts_sync] === false
       raise t(:setup_settings_first)
     end
-    #if self.google_contacts.nil?
-    #  self.auth!
-    #end
   end
 
 
