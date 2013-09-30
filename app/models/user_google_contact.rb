@@ -124,6 +124,7 @@ class UserGoogleContact < Person
         gc.delete!(contact)
         self.google_contact_id = nil
       end
+      self.must_google_sync = false
       unless self.save
         if self.errors.count > 0
           puts self.errors.inspect
