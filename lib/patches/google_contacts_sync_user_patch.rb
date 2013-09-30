@@ -1,3 +1,4 @@
+#! encoding: utf-8
 module GoogleContactsSyncPlugin
   module UserPatch
     extend ActiveSupport::Concern
