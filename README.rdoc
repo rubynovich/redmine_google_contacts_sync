@@ -1,3 +1,15 @@
 = redmine_google_contacts_sync
 
-Description goes here
+== Install
+
+add sources
+
+gem sources -a http://gems.github.com
+gem install tenderlove-frex
+
+fix: update redmine requitments: nokogori <= 1.6.0 for test redmine group
+
+
+update all gems 
+
+
