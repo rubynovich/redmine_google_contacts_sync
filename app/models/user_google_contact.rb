@@ -96,43 +96,45 @@ class UserGoogleContact < Person
       contact = gc.get(self.google_contact_id)
       action = self.status == 1 ? :update : :destroy
     end
-    if contact.nil?
+    if contact.nil? && (self.status == 1)
       contact = GoogleContacts::Element.new
       action = :create
     end
-    contact.category = "contact"
-    if [:create, :update].include?(action)
-      contact.title = self.name
-      contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present?
-      contact.add_email(self.email, :work, :primary=>true)
-      contact.add_im(self.email, :google_talk)
-      self.phones.each do |phone|
-        phone.gsub!(/^8/,'+7')
-        contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
-      end
+    if contact.present?
+      contact.category = "contact"
+      if [:create, :update].include?(action)
+        contact.title = self.name
+        contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present?
+        contact.add_email(self.email, :work, :primary=>true)
+        contact.add_im(self.email, :google_talk)
+        self.phones.each do |phone|
+          phone.gsub!(/^8/,'+7')
+          contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
+        end
 
-      self.no_set_google_sync = true
-      self.must_google_sync = false
-      self.last_google_sync_at = Time.now
-    end
-    if action == :create
-      contact = gc.create!(contact)
-      self.google_contact_id = File.basename(contact.id)
-    elsif action == :update
-      gc.update!(contact)
-    elsif action == :destroy
-      gc.delete!(contact)
-      self.google_contact_id = nil
-    end
-    unless self.save
-      if self.errors.count > 0
-        puts self.errors.inspect
+        self.no_set_google_sync = true
+        self.must_google_sync = false
+        self.last_google_sync_at = Time.now
       end
-    end
-    if self.avatar && [:create, :update].include?(action)
-      gc.update_photo!(contact, self.avatar.diskfile) if File.exist?(self.avatar.diskfile)
-    elsif gc.get_photo(contact) || action == :destroy
-      gc.delete_photo!(contact)
+      if action == :create
+        contact = gc.create!(contact)
+        self.google_contact_id = File.basename(contact.id)
+      elsif action == :update
+        gc.update!(contact)
+      elsif action == :destroy
+        gc.delete!(contact)
+        self.google_contact_id = nil
+      end
+      unless self.save
+        if self.errors.count > 0
+          puts self.errors.inspect
+        end
+      end
+      if self.avatar && [:create, :update].include?(action)
+        gc.update_photo!(contact, self.avatar.diskfile) if File.exist?(self.avatar.diskfile)
+      elsif gc.get_photo(contact) || action == :destroy
+        gc.delete_photo!(contact)
+      end
     end
   end
 
