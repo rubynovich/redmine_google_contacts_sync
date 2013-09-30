@@ -107,7 +107,7 @@ class UserGoogleContact < Person
       self.last_google_sync_at = Time.now
       if [:create, :update].include?(action)
         contact.title = self.name
-        contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present?
+        contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present? && action == :create
         contact.add_email(self.email, :work, :primary=>true)
         contact.add_im(self.email, :google_talk)
         self.phones.each do |phone|
