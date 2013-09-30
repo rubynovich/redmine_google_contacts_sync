@@ -62,7 +62,7 @@ class UserGoogleContact < Person
 
 
   def self.group_exists?
-    self.google_group_id.present? && self.google_contacts.get(@@google_group_id, :api_type => :groups).present?
+    self.google_group_id.present? && self.google_contacts.get(self.google_group_id, :api_type => :groups).present?
   end
 
   def self.create_group!
@@ -102,6 +102,9 @@ class UserGoogleContact < Person
     end
     if contact.present?
       contact.category = "contact"
+      self.no_set_google_sync = true
+      self.must_google_sync = false
+      self.last_google_sync_at = Time.now
       if [:create, :update].include?(action)
         contact.title = self.name
         contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present?
@@ -111,10 +114,6 @@ class UserGoogleContact < Person
           phone.gsub!(/^8/,'+7')
           contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
         end
-
-        self.no_set_google_sync = true
-        self.must_google_sync = false
-        self.last_google_sync_at = Time.now
       end
       if action == :create
         contact = gc.create!(contact)
