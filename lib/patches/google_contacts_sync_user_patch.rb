@@ -9,10 +9,8 @@ module GoogleContactsSyncPlugin
 
     private
       def set_to_google_contacts_sync
-        if User.no_set_google_sync.is_a?(Array)
-          unless User.no_set_google_sync.include?(self.id)
-            self.must_google_sync = true
-          end
+        if (User.no_set_google_sync.nil? || (! User.no_set_google_sync.include?(self.id)))
+          self.must_google_sync = true
         end
       end
 
