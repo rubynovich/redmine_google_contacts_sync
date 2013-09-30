@@ -6,7 +6,7 @@ class UserGoogleContact < Person
   cattr_accessor :google_group_uri
   cattr_accessor :google_group_title
 
-  scope :must_update, lambda{ where(:must_google_sync => true).where(["users.last_google_sync_at <= ?", (Time.now - Setting[:plugin_redmine_google_contacts_sync][:minimal_interval_for_sync].to_i.seconds) ]) }
+  scope :must_update, lambda{ where(:must_google_sync => true).where("login <> ''").where(:status=>[1,3]).where(["users.last_google_sync_at <= ?", (Time.now - Setting[:plugin_redmine_google_contacts_sync][:minimal_interval_for_sync].to_i.seconds) ]) }
   scope :by_ids, lambda{|ids| where(:id=>ids)}
 
   def self.auth!
