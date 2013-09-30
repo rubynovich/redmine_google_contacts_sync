@@ -4,16 +4,20 @@ module GoogleContactsSyncPlugin
     included do
       before_save :set_to_google_contacts_sync
       after_save :run_google_sync
-      attr_accessor :no_set_google_sync
+      cattr_accessor :no_set_google_sync
     end
 
     private
       def set_to_google_contacts_sync
-        self.must_google_sync = true unless self.no_set_google_sync
+        if User.no_set_google_sync.is_a?(Array)
+          unless User.no_set_google_sync.include?(self.id)
+            self.must_google_sync = true
+          end
+        end
       end
 
       def run_google_sync
-        if Setting[:plugin_redmine_google_contacts_sync] && (Setting[:plugin_redmine_google_contacts_sync][:sync_after_save].to_i == 1)
+        if (! User.no_set_google_sync.include?(self.id)) && Setting[:plugin_redmine_google_contacts_sync] && (Setting[:plugin_redmine_google_contacts_sync][:sync_after_save].to_i == 1)
           UserGoogleContact.sync_all!
         end
       end

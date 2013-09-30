@@ -102,7 +102,8 @@ class UserGoogleContact < Person
     end
     if contact.present?
       contact.category = "contact"
-      self.no_set_google_sync = true
+      User.no_set_google_sync ||= []
+      User.no_set_google_sync << self.id
       self.must_google_sync = false
       self.last_google_sync_at = Time.now
       if [:create, :update].include?(action)
@@ -125,7 +126,9 @@ class UserGoogleContact < Person
         self.google_contact_id = nil
       end
       self.must_google_sync = false
-      unless self.save
+      if self.save
+        User.no_set_google_sync.delete(self.id) if User.no_set_google_sync.is_a?(Array)
+      else
         if self.errors.count > 0
           puts self.errors.inspect
         end
