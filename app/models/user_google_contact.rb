@@ -10,11 +10,17 @@ class UserGoogleContact < Person
   scope :must_update, lambda{ where(:must_google_sync => true).where("login <> ''").where(:status=>[1,3]).where(["users.last_google_sync_at <= ?", (Time.now - Setting[:plugin_redmine_google_contacts_sync][:minimal_interval_for_sync].to_i.seconds) ]) }
   scope :by_ids, lambda{|ids| where(:id=>ids)}
 
-  def self.auth!
+  def self.auth!(args={})
+    args_gc = {}
+    [:email].each do |key|
+      args_gc[key] = args[key].dup if args[key].present?
+      args.delete(key)
+    end
+
     self.check_settings!
     unless self.google_contacts.present? || Setting[:plugin_redmine_google_contacts_sync][:account_login].blank? || Setting[:plugin_redmine_google_contacts_sync][:account_password].blank?
       begin
-        self.google_contacts = GoogleContacts::Auth::UserLogin.new(Setting[:plugin_redmine_google_contacts_sync][:account_login], Setting[:plugin_redmine_google_contacts_sync][:account_password]).google_contacts
+        self.google_contacts = GoogleContacts::Auth::UserLogin.new(Setting[:plugin_redmine_google_contacts_sync][:account_login], Setting[:plugin_redmine_google_contacts_sync][:account_password], args).google_contacts(args_gc)
       rescue
       end
     end
@@ -108,7 +114,15 @@ class UserGoogleContact < Person
       self.must_google_sync = false
       self.last_google_sync_at = Time.now
       if [:create, :update].include?(action)
+        contact.data = {}
         contact.title = self.name
+        contact.data["gd:name"] = {
+            "gd:fullName" => self.name,
+            "gd:givenName" => self.firstname,
+            "gd:familyName" => self.lastname
+        }
+        contact.etag = '*'
+        contact.data["gd:name"]["gd:additionalName"] = self.middlename unless self.middlename.nil? || (self.middlename == '')
         contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present? && action == :create
         contact.add_email(self.email, :work, :primary=>true)
         contact.add_im(self.email, :google_talk)
@@ -121,7 +135,7 @@ class UserGoogleContact < Person
         contact = gc.create!(contact)
         self.google_contact_id = File.basename(contact.id)
       elsif action == :update
-        gc.update!(contact)
+        gc.update!(contact, URI("https://www.google.com/m8/feeds/contacts/default/full/3c86d90d3c5729"), :put)
       elsif action == :destroy
         gc.delete!(contact)
         self.google_contact_id = nil
