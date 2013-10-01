@@ -1,3 +1,4 @@
+#! encoding: utf-8
 namespace :google_contacts_sync do
   desc 'Sync all google contacts'
   task :all => :environment do
