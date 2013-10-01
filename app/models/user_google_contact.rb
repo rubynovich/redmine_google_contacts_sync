@@ -121,6 +121,8 @@ class UserGoogleContact < Person
             "gd:givenName" => self.firstname,
             "gd:familyName" => self.lastname
         }
+        contact.add_org_info(:title, self.job_title) if self.job_title.present?
+        contact.add_org_info(:name, self.department.try(:name)) if self.department.present?
         contact.etag = '*'
         contact.data["gd:name"]["gd:additionalName"] = self.middlename unless self.middlename.nil? || (self.middlename == '')
         contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present? && action == :create
