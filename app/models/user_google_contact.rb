@@ -117,10 +117,23 @@ class UserGoogleContact < Person
         contact.data = {}
         contact.title = self.name
         contact.data["gd:name"] = {
-            "gd:fullName" => self.name,
+            #"gd:fullName" => self.name,
             "gd:givenName" => self.firstname,
             "gd:familyName" => self.lastname
         }
+
+        if self.address.present?
+          city = 'Москва' if self.address.gsub(/\s/,'').mb_chars.downcase =~ /москва/
+          city = 'Санкт-Петербург' if self.address.gsub(/\s/,'').mb_chars.downcase =~ /петербург/
+          item = {"gd:formattedAddress"=>self.address, "@rel"=>"http://schemas.google.com/g/2005#work"}
+          item["gd:city"=>city] if city.present?
+          contact.data["gd:structuredPostalAddress"] = [item]
+        end
+
+
+        contact.birthday = self.birthday if self.birthday.present?
+
+
         contact.add_org_info(self.department.try(:name), self.job_title)
         contact.etag = '*'
         contact.data["gd:name"]["gd:additionalName"] = self.middlename unless self.middlename.nil? || (self.middlename == '')
