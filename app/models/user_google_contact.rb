@@ -127,6 +127,7 @@ class UserGoogleContact < Person
         contact.group_ids = [ self.google_group_uri ] if self.google_group_id.present? && action == :create
         contact.add_email(self.email, :work, :primary=>true)
         contact.add_im(self.email, :google_talk)
+        contact.add_im(self.skype, :skype) if self.skype.present?
         self.phones.each do |phone|
           phone.gsub!(/^8/,'+7')
           contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
