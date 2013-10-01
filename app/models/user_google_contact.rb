@@ -40,7 +40,11 @@ class UserGoogleContact < Person
     self.auth!
     self.create_group! unless self.group_exists?
     (options[:force] ? self.by_ids(ids).all : self.by_ids(ids).must_update).each do |user_google_contact|
-      user_google_contact.sync!
+      begin
+        user_google_contact.sync!
+      rescue => e
+        Rails.logger.info "Error google sync at #{Time.now.to_s} - #{user_google_contact.inspect} - #{e.inspect} "
+      end
     end
   end
 
