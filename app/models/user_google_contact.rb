@@ -131,11 +131,14 @@ class UserGoogleContact < Person
           contact.add_phone(phone, (phone.gsub(/\D/,'').size == 11) && (phone.gsub(/\D/,'') =~ /^79/) ? :mobile : :work )
         end
       end
+
+
+
       if action == :create
         contact = gc.create!(contact)
         self.google_contact_id = File.basename(contact.id)
       elsif action == :update
-        gc.update!(contact, URI("https://www.google.com/m8/feeds/contacts/default/full/3c86d90d3c5729"), :put)
+        gc.update!(contact, URI("https://www.google.com/m8/feeds/contacts/default/full/#{self.google_contact_id}"), :put)
       elsif action == :destroy
         gc.delete!(contact)
         self.google_contact_id = nil
