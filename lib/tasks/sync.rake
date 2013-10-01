@@ -19,6 +19,14 @@ namespace :google_contacts_sync do
     end
   end
 
+  desc 'Init all contacts'
+  task :destroy_all => :environment do
+    Setting[:plugin_redmine_google_contacts_sync][:sync_after_save] = 0 if Setting[:plugin_redmine_google_contacts_sync]
+    #UserGoogleContact.disable_auto_sync
+    #UserGoogleContact.clear_google_contacts!
+    #UserGoogleContact.update_all(["google_contact_id = ?", nil])
+  end
+
   desc 'Destroy all contacts'
   task :destroy_all => :environment do
     UserGoogleContact.auth!
