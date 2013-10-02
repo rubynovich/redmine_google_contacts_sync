@@ -101,15 +101,14 @@ class UserGoogleContact < Person
 
   def sync!(options={})
     self.class.auth!
-    self.google_group_id
+    self.class.google_group_id
     gc = self.class.google_contacts
-    if self.google_contact_id.present?
-      contact = gc.get(self.google_contact_id)
-      action = self.status == 1 ? :update : :destroy
-    end
+    contact = gc.get(self.google_contact_id) if self.google_contact_id.present?
     if contact.nil? && (self.status == 1)
       contact = GoogleContacts::Element.new
       action = :create
+    else
+      action = self.status == 1 ? :update : :destroy
     end
     if contact.present?
       contact.category = "contact"
@@ -119,7 +118,7 @@ class UserGoogleContact < Person
       self.last_google_sync_at = Time.now
       if [:create, :update].include?(action)
         contact.data = {}
-        contact.title = self.name
+        contact.title = "#{self.firstname} #{self.lastname}"
         contact.data["gd:name"] = {
             #"gd:fullName" => self.name,
             "gd:givenName" => self.firstname,
@@ -138,11 +137,11 @@ class UserGoogleContact < Person
         contact.birthday = self.birthday if self.birthday.present?
 
 
-        contact.add_org_info(self.department.try(:name), self.job_title)
+        contact.add_org_info(self.department.try(:name), self.job_title) if self.department.present? || self.job_title.present?
         contact.etag = '*'
         contact.data["gd:name"]["gd:additionalName"] = self.middlename unless self.middlename.nil? || (self.middlename == '')
-        group_base = "http://www.google.com/m8/feeds/groups/#{Setting[:plugin_redmine_google_contacts_sync][:account_login].gsub('@','%40')}/"
-        contact.group_ids = self.google_group_id.present? ? [ "#{group_base}6", self.google_group_uri ] : ["#{group_base}6"] if action == :create
+        my_contacts_group = "http://www.google.com/m8/feeds/groups/#{Setting[:plugin_redmine_google_contacts_sync][:account_login].gsub('@','%40')}/base/6"
+        contact.group_ids = self.class.google_group_id.present? ? [ self.class.google_group_uri, my_contacts_group ] : [my_contacts_group] if action == :create
         contact.add_email(self.email, :work, :primary=>true)
         contact.add_im(self.email, :google_talk)
         contact.add_im(self.skype, :skype) if self.skype.present?
