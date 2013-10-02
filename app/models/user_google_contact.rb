@@ -141,7 +141,7 @@ class UserGoogleContact < Person
         contact.add_org_info(self.department.try(:name), self.job_title)
         contact.etag = '*'
         contact.data["gd:name"]["gd:additionalName"] = self.middlename unless self.middlename.nil? || (self.middlename == '')
-        group_base = "http://www.google.com/m8/feeds/groups/default/"
+        group_base = "http://www.google.com/m8/feeds/groups/#{Setting[:plugin_redmine_google_contacts_sync][:account_login].gsub('@','%40')}/"
         contact.group_ids = self.google_group_id.present? ? [ "#{group_base}6", self.google_group_uri ] : ["#{group_base}6"] if action == :create
         contact.add_email(self.email, :work, :primary=>true)
         contact.add_im(self.email, :google_talk)
